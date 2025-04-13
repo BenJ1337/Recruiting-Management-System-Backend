@@ -1,0 +1,1 @@
+export { JobPostingService } from './job_posting_service';
