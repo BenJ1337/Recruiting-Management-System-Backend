@@ -7,7 +7,6 @@ import { LOG } from '../../../crosscutting/logger'
 export class JobPostingController extends CommonController {
   private static readonly jobContr: JobPostingController = new JobPostingController(JobPostingService.init());
   public static readonly paramJobPostingId: string = ':jobPostingId';
-
   public static init(): JobPostingController {
     return JobPostingController.jobContr;
   }
