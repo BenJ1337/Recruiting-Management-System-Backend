@@ -9,7 +9,7 @@ import {
 import { LoginService } from './login.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { AccessToken, User } from '../domain';
+import { AccessToken, UserDto } from '../domain';
 import { AuthGuard } from '@nestjs/passport';
 import { Public } from '../decorator/public.decorator';
 
@@ -23,8 +23,9 @@ export class LoginController {
 
   @UseGuards(AuthGuard('local')) // Trigger LoginStrategy
   @Post('v1/login')
-  async login(@Body() user: User): Promise<AccessToken | BadRequestException> {
-    this.logger.info(`User: ${JSON.stringify(user)}`);
+  async login(
+    @Body() user: UserDto,
+  ): Promise<AccessToken | BadRequestException> {
     try {
       return await this.loginService.login(user);
     } catch (err) {

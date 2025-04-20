@@ -4,10 +4,7 @@ import { WinstonModule } from 'nest-winston';
 import { Console } from 'winston/lib/winston/transports';
 import * as winston from 'winston';
 import { RecruitingManagementSystemModule } from './rms/rms.module';
-import { AuthV1Module } from './auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtGuard } from './auth/v1/guard/jwt.guard';
-import { JwtStrategy } from './auth/v1/strategy';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -17,8 +14,7 @@ import { JwtStrategy } from './auth/v1/strategy';
       transports: [new Console()],
     }),
     RecruitingManagementSystemModule,
-    AuthV1Module,
+    AuthModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: JwtGuard }, JwtStrategy],
 })
 export class RootModule {}

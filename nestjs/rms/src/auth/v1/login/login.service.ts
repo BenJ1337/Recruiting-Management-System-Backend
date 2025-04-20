@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { User, AccessToken } from '../domain';
+import { UserDto, AccessToken } from '../domain';
 import { JwtService } from '@nestjs/jwt';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -11,8 +11,7 @@ export class LoginService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async validateUser(user: User): Promise<User> {
-    this.logger.info(`User: ${user}`);
+  async validateUser(user: UserDto): Promise<UserDto> {
     if (user.username !== 'user') {
       throw new Error('User not found!');
     }
@@ -22,7 +21,7 @@ export class LoginService {
     return user;
   }
 
-  async login(user: User): Promise<AccessToken> {
+  async login(user: UserDto): Promise<AccessToken> {
     return { access_token: this.jwtService.sign(user) };
   }
 }

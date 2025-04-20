@@ -21,8 +21,8 @@ export class JwtGuard extends AuthGuard('jwt') {
       context.getHandler(),
       context.getClass(),
     ]);
-    this.logger.info(`JwtGuard: ${isPublic}`);
-    if (isPublic) return true;
+    this.logger.info(`Is path public: ${isPublic !== undefined && isPublic}`);
+    if (isPublic !== undefined && isPublic) return true;
     return super.canActivate(context);
   }
 }

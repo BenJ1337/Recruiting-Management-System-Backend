@@ -18,13 +18,15 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { JobPosting, JobPostingOrNull } from '../domain';
 import { Response } from 'express';
 import { JobPostingPatch, JobPostingNew } from '../domain/job_posting';
+import { User } from 'src/auth/v1/decorator/user.decorator';
+import { UserDto } from 'src/auth/v1/domain';
 
 @Controller('api')
 export class JobPostingController {
   constructor(
     private readonly jobPostingService: JobPostingService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   @Get('v1/jobpostings')
   getJobPostings(): JobPosting[] {
@@ -32,8 +34,12 @@ export class JobPostingController {
   }
 
   @Get('v1/jobpostings/:postId')
-  getJobPosting(@Param('postId') postId: string, @Res() res: Response): void {
-    this.logger.info(`Get Params: ${postId}`);
+  getJobPosting(
+    @Param('postId') postId: string,
+    @Res() res: Response,
+    @User() user: UserDto,
+  ): void {
+    this.logger.info(`Get Params: ${postId} for User: ${JSON.stringify(user)}`);
     const jobPosting: JobPostingOrNull = this.jobPostingService.getJobPosting(
       this.getId(postId),
     );

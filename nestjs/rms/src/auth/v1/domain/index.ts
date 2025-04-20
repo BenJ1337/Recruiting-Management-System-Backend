@@ -1,8 +1,9 @@
-export interface User {
-    username: string;
-    password: string;
+export interface UserDto {
+  username: string;
+  password: string;
+  roles?: string[];
 }
 
 export interface AccessToken {
-    access_token: string;
+  access_token: string;
 }
