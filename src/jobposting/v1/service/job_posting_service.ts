@@ -10,21 +10,22 @@ export class JobPostingService {
     return JobPostingService.jobService;
   }
 
-  private constructor(private readonly entrys: IJobPosting[] = []) {
+  private constructor(private entrys: IJobPosting[] = []) {
     this.entrys.push({ id: 1, title: "Job 1", description: "Job Desc", department: Department.DEPARTMENT1, status: JobPostingStatus.DRAFT });
     this.entrys.push({ id: 2, title: "Job 2", description: "Job Desc", department: Department.DEPARTMENT2, status: JobPostingStatus.DRAFT });
   }
 
-  public getJobPostings(): IJobPosting[] {
-    LOG.info('getJobPostings');
+  public async getJobPostings(): Promise<IJobPosting[]> {
+    const highestId = await this.getHighestId();
+    LOG.info(`get all job postings: ${highestId}`);
     return this.entrys;
   }
 
-  public getJobPosting(id: number): IJobPostingOrNull {
+  public async getJobPosting(id: number): Promise<IJobPostingOrNull> {
     return this.findJobPosting(id);
   }
 
-  public addOrUpdateJobPosting(id: number, body: any): boolean {
+  public async addOrReplaceJobPosting(id: number, body: any): Promise<boolean> {
     const deleted: boolean = this.removeJobPostingIfExists(id);
     const jobPosting = this.createJobPosting(id, body);
     this.entrys.push(jobPosting);
@@ -32,7 +33,15 @@ export class JobPostingService {
     return deleted;
   }
 
-  public updateJobPosting(id: number, jobPostingUpdate: any): void {
+  public async addJobPosting(body: any): Promise<number> {
+    const newId = (await this.getHighestId()) + 1;
+    const jobPosting = this.createJobPosting(newId, body);
+    this.entrys.push(jobPosting);
+    LOG.info(`JobPosting with ${newId} added.`);
+    return newId;
+  }
+
+  public async updateJobPosting(id: number, jobPostingUpdate: any): void {
     const jobPosting = this.findJobPosting(id);
     if (jobPosting == null) {
       throw new Error(`There is not job posting for id: ${id}`);
@@ -49,11 +58,11 @@ export class JobPostingService {
     LOG.info(`JobPosting updated: ${JSON.stringify(jobPosting)}`);
   }
 
-  public deleteJobPosting(id: number): boolean {
+  public async deleteJobPosting(id: number): boolean {
     return this.removeJobPostingIfExists(id);
   }
 
-  private findJobPosting(id: number) {
+  private async findJobPosting(id: number) {
     const entry: IJobPosting | undefined = this.entrys.filter(e => e.id == id).at(0);
     if (entry === undefined) {
       LOG.info(`No JobPosting for Id: ${id}`);
@@ -63,7 +72,7 @@ export class JobPostingService {
     return entry;
   }
 
-  private removeJobPostingIfExists(id: number): boolean {
+  private async removeJobPostingIfExists(id: number): boolean {
     const jobPosting = this.findJobPosting(id);
     if (jobPosting !== null) {
       this.entrys = this.entrys.filter(e => e !== jobPosting);
@@ -77,5 +86,9 @@ export class JobPostingService {
     const jobPosting: any = { "id": id };
     Object.assign(jobPosting, body);
     return jobPosting;
+  }
+
+  private getHighestId(): Promise<number> {
+    return Promise.resolve(this.entrys.map(jobPosting => jobPosting.id).reduce((a, b) => Math.max(a, b)));
   }
 }

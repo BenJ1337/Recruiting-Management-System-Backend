@@ -18,16 +18,16 @@ export class JobPostingController extends CommonController {
   public getJobPostings(): RequestHandler {
     return async (req: Request, res: Response) => {
       LOG.info('Search for all JobPosting');
-      const jobPostings: IJobPosting[] = this.jobPostingService.getJobPostings();
+      const jobPostings: IJobPosting[] = await this.jobPostingService.getJobPostings();
       return res.status(200).json(jobPostings);
     };
   }
 
   public getJobPosting(): RequestHandler {
     return async (req: Request, res: Response) => {
-      return await this.getId(req.params.jobPostingId).then(jobId => {
+      return await this.getId(req.params.jobPostingId).then(async jobId => {
         LOG.info(`Search JobPosting with Id: ${jobId}`);
-        const jobPostings: IJobPostingOrNull = this.jobPostingService.getJobPosting(jobId);
+        const jobPostings: IJobPostingOrNull = await this.jobPostingService.getJobPosting(jobId);
         return res.status(200).json(jobPostings);
       }).catch(err => {
         LOG.error(`Unable to search job posting because of ${err}`);
@@ -40,7 +40,8 @@ export class JobPostingController extends CommonController {
     return async (req: Request, res: Response) => {
       return await this.getId(req.params.jobPostingId).then(jobId => {
         LOG.info(`Create or Update JobPosting with Id: ${jobId}, Body: ${JSON.stringify(req.body)}`);
-        if (this.jobPostingService.addOrUpdateJobPosting(jobId, req.body)) {
+        const result = this.jobPostingService.addOrReplaceJobPosting(jobId, req.body);
+        if (result) {
           return res.status(200).end();
         }
         return res.status(201).end();
@@ -48,6 +49,18 @@ export class JobPostingController extends CommonController {
         LOG.error(`Unable to create/ update job posting because of ${err}`);
         return res.status(400).end();
       });
+    };
+  }
+
+  public postJobPosting(): RequestHandler {
+    return async (req: Request, res: Response) => {
+      LOG.info(`Create new job post, Body: ${JSON.stringify(req.body)}`);
+      return await this.jobPostingService.addJobPosting(req.body)
+        .then(id => res.status(200).json({ "id": id }),
+          err => {
+            LOG.error(`Error: ${err}`);
+            return res.status(400).end();
+          });
     };
   }
 
@@ -67,14 +80,13 @@ export class JobPostingController extends CommonController {
   public deleteJobPosting(): RequestHandler {
     return async (req: Request, res: Response) => {
       return await this.getId(req.params.jobPostingId).then(jobId => {
-        LOG.info(`Delete JobPosting with Id: ${jobId}, Body: ${JSON.stringify(req.body)}`);
-        this.jobPostingService.deleteJobPosting(jobId);
-        return res.status(204).end();
-      }).catch(err => {
-        LOG.error(`Unable to delete job posting because of ${err}`);
-        return res.status(400).end();
-      });
-    };
+        LOG.info(`Delete job posting with id: ${jobId}`);
+        return this.jobPostingService.deleteJobPosting(jobId).then(succ => res.status(204).end(), err => {
+          LOG.error(`Unable to delete job posting because of ${err}`);
+          return res.status(400).end();
+        })
+      })
+    }
   }
 
   private getId(id: string): Promise<any> {

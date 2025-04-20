@@ -15,6 +15,7 @@ export class JobPostingRoutesBuilder extends CommonRoutesBuilder {
         router.get(this.path, contr.getJobPostings());
         router.get(pathWithParam, contr.getJobPosting());
         router.put(pathWithParam, JobPostingValidator.validateJobPosting(), contr.putJobPosting());
+        router.post(this.path, JobPostingValidator.validateJobPosting(), contr.postJobPosting());
         router.patch(pathWithParam, contr.patchJobPosting());
         router.delete(pathWithParam, contr.deleteJobPosting());
         return router;
