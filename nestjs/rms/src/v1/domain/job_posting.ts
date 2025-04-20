@@ -18,6 +18,14 @@ export interface JobPostingBase {
   note?: string;
 }
 
+export interface JobPostingPatch {
+  title?: string;
+  description?: string;
+  department?: Department;
+  status?: JobPostingStatus;
+  note?: string;
+}
+
 export enum JobPostingStatus {
   DRAFT,
   QA,

@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  Patch,
   Post,
   Put,
   Res,
@@ -16,7 +17,7 @@ import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { JobPosting, JobPostingOrNull } from '../domain';
 import { Response } from 'express';
-import { JobPostingNew } from '../domain/job_posting';
+import { JobPostingPatch, JobPostingNew } from '../domain/job_posting';
 
 @Controller('api')
 export class JobPostingController {
@@ -47,12 +48,29 @@ export class JobPostingController {
   putJobPostings(
     @Param('postId') postId: string,
     @Body() post: JobPostingNew,
-  ): boolean {
+  ): any {
     this.logger.info(`Put Params: ${postId}`);
-    return this.jobPostingService.addOrReplaceJobPosting(
+    const status = this.jobPostingService.addOrReplaceJobPosting(
       this.getId(postId),
       post,
     );
+    return { status: status };
+  }
+
+  @Patch('v1/jobpostings/:postId')
+  patchJobPostings(
+    @Param('postId') postId: string,
+    @Body() post: JobPostingPatch,
+  ): void {
+    this.logger.info(`Post (update) Params: ${postId}`);
+    try {
+      this.jobPostingService.patchJobPosting(this.getId(postId), post);
+    } catch (err) {
+      throw new HttpException(
+        'Update failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post('v1/jobpostings/:postId')
@@ -64,6 +82,7 @@ export class JobPostingController {
     try {
       this.jobPostingService.updateJobPosting(this.getId(postId), post);
     } catch (err) {
+      this.logger.error(err);
       throw new HttpException(
         'Update failed',
         HttpStatus.INTERNAL_SERVER_ERROR,

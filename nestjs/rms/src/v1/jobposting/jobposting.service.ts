@@ -7,22 +7,22 @@ import {
 } from './../domain';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { JobPostingNew } from '../domain/job_posting';
+import { JobPostingNew, JobPostingPatch } from '../domain/job_posting';
 
 @Injectable()
 export class JobPostingService {
-  private entries: JobPosting[] = [];
+  private jobPostingMap: Map<number, JobPosting> = new Map();
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
-    this.entries.push({
+    this.jobPostingMap.set(1, {
       id: 1,
       title: 'Job 1',
       description: 'Job Desc',
       department: Department.DEPARTMENT1,
       status: JobPostingStatus.DRAFT,
     });
-    this.entries.push({
+    this.jobPostingMap.set(2, {
       id: 2,
       title: 'Job 2',
       description: 'Job Desc',
@@ -32,47 +32,55 @@ export class JobPostingService {
   }
 
   public getJobPostings(): JobPosting[] {
-    const highestId = this.getHighestId();
-    this.logger.info(`get all job postings: ${highestId}`);
-    return this.entries;
+    return Array.from(this.jobPostingMap.values());
   }
 
   public getJobPosting(id: number): JobPostingOrNull {
-    return this.findJobPosting(id);
+    const jobPosting = this.jobPostingMap.get(id);
+    if (jobPosting == undefined) {
+      return null;
+    }
+    return jobPosting;
   }
 
   public addOrReplaceJobPosting(
     id: number,
     jobPostingNew: JobPostingNew,
-  ): boolean {
-    const deleted: boolean = this.removeJobPostingIfExists(id);
-    const jobPosting = this.createJobPosting(jobPostingNew);
-    this.entries.push(jobPosting);
-    this.logger.info(
-      `JobPosting ${deleted ? 'updated' : 'added'}: ${JSON.stringify(jobPosting)}`,
-    );
-    return deleted;
+  ): string {
+    const created: string = this.jobPostingMap.has(id) ? 'updated' : 'created';
+    const jobPosting: JobPosting = this.createJobPosting(jobPostingNew);
+    jobPosting.id = id;
+    this.jobPostingMap.set(id, jobPosting);
+    this.logger.info(`Job posting ${created}: ${JSON.stringify(jobPosting)}`);
+    return created;
   }
 
   public addJobPosting(jobPostingNew: JobPostingNew): number {
     const jobPosting: JobPosting = this.createJobPosting(jobPostingNew);
-    this.entries.push(jobPosting);
+    this.jobPostingMap[jobPosting.id] = jobPosting;
     return jobPosting.id;
   }
 
-  public updateJobPosting(id: number, jobPostingUpdate: any): void {
-    const jobPosting = this.findJobPosting(id);
-    if (jobPosting == null) {
-      throw new Error(`There is not job posting for id: ${id}`);
+  public updateJobPosting(id: number, jobPostingNew: JobPosting): void {
+    const jobPosting = this.jobPostingMap.get(id);
+    if (jobPosting == undefined) {
+      throw new Error(`There is no job posting for id: ${id}`);
+    }
+    this.jobPostingMap.set(id, jobPostingNew);
+    this.logger.info(`JobPosting updated: ${JSON.stringify(jobPosting)}`);
+  }
+
+  public patchJobPosting(id: number, jobPostingUpdate: JobPostingPatch): void {
+    const jobPosting = this.jobPostingMap.get(id);
+    if (jobPosting == undefined) {
+      throw new Error(`There is no job posting for id: ${id}`);
     }
     for (const key in jobPostingUpdate) {
-      if (jobPostingUpdate.hasOwnProperty(key)) {
-        const val = jobPostingUpdate[key];
-        if (!jobPosting.hasOwnProperty(key)) {
-          throw new Error(`Job posting doesn't have the property: ${key}`);
-        }
-        jobPosting[key] = val;
+      const val = jobPostingUpdate[key];
+      if (!jobPosting.hasOwnProperty(key)) {
+        throw new Error(`Job posting doesn't have the property: ${key}`);
       }
+      jobPosting[key] = val;
     }
     this.logger.info(`JobPosting updated: ${JSON.stringify(jobPosting)}`);
   }
@@ -82,9 +90,7 @@ export class JobPostingService {
   }
 
   private findJobPosting(id: number): JobPostingOrNull {
-    const entry: JobPosting | undefined = this.entries
-      .filter((e) => e.id == id)
-      .at(0);
+    const entry: JobPosting | undefined = this.jobPostingMap.get(id);
     if (entry === undefined) {
       this.logger.info(`No JobPosting for Id: ${id}`);
       return null;
@@ -94,16 +100,9 @@ export class JobPostingService {
   }
 
   private removeJobPostingIfExists(id: number): boolean {
-    const jobPosting = this.findJobPosting(id);
-    if (jobPosting !== null) {
-      this.entries = this.entries.filter((e) => {
-        const value: JobPosting = jobPosting;
-        return e !== value;
-      });
-      this.logger.info(`JobPosting with Id ${id} removed`);
-      return true;
-    }
-    return false;
+    const deleted = this.jobPostingMap.delete(id);
+    this.logger.info(`JobPosting with Id ${id} removed`);
+    return deleted;
   }
 
   private createJobPosting(jobPosting: JobPostingNew): JobPosting {
@@ -115,14 +114,17 @@ export class JobPostingService {
   }
 
   private getHighestId(): number {
-    if (this.entries.length == 0) {
+    const entries = Array.from(this.jobPostingMap.values());
+    if (entries.length == 0) {
       return 1;
     }
-    if (this.entries.length == 1) {
-      return this.entries[0].id;
+    if (entries.length == 1) {
+      return entries[0].id;
     }
-    return this.entries
+    const highestId = entries
       .map((jobPosting) => jobPosting.id)
       .reduce((a, b) => Math.max(a, b));
+    this.logger.info(`Highest Id of all job postings: ${highestId}`);
+    return highestId;
   }
 }
