@@ -1,18 +1,34 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Inject,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { LoginService } from './login.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { User } from '../domain';
+import { AccessToken, User } from '../domain';
+import { AuthGuard } from '@nestjs/passport';
+import { Public } from '../decorator/public.decorator';
 
-@Controller('api')
+@Public()
+@Controller('auth')
 export class LoginController {
-    constructor(
-        private readonly loginService: LoginService,
-        @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    ) { }
+  constructor(
+    private readonly loginService: LoginService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) {}
 
-    @Post('v1/login')
-    login(@Body() user: User): void {
-        this.logger.info(`User: ${JSON.stringify(user)}`);
+  @UseGuards(AuthGuard('local')) // Trigger LoginStrategy
+  @Post('v1/login')
+  async login(@Body() user: User): Promise<AccessToken | BadRequestException> {
+    this.logger.info(`User: ${JSON.stringify(user)}`);
+    try {
+      return await this.loginService.login(user);
+    } catch (err) {
+      throw new BadRequestException(`Auth failed! ${err.message}`);
     }
+  }
 }

@@ -19,4 +19,7 @@ $ curl -v -H "Content-Type: application/json" -d "{\"title\":\"Max Mustermann\",
 $ curl -X PATCH -v -H "Content-Type: application/json" -d "{\"title\":\"Otto der Erste\"}" http://localhost/api/v1/jobpostings/3
 
 $ curl -X DELETE -v localhost/api/v1/jobpostings/2
+
+$ curl -v -H "Content-Type: application/json" -d "{\"username\":\"user\", \"password\":\"123456\"}" http://localhost/auth/v1/login
+$ curl -v -H "Authorization: Bearer <your jwt>" localhost/api/v1/jobpostings/2
 ```
