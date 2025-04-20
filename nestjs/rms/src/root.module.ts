@@ -3,7 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import { Console } from 'winston/lib/winston/transports';
 import * as winston from 'winston';
-import { RmsV1Module } from './v1/rmsv1.module';
+import { RecruitingManagementSystemModule } from './rms/rms.module';
+import { AuthV1Module } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { RmsV1Module } from './v1/rmsv1.module';
       format: winston.format.cli(),
       transports: [new Console()],
     }),
-    RmsV1Module,
+    RecruitingManagementSystemModule,
+    AuthV1Module,
   ],
 })
 export class RootModule { }

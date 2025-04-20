@@ -4,7 +4,7 @@ import {
   JobPosting,
   JobPostingStatus,
   Department,
-} from './../domain';
+} from '../domain';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { JobPostingNew, JobPostingPatch } from '../domain/job_posting';

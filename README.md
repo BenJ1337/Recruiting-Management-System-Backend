@@ -14,7 +14,7 @@ $ curl -v localhost/api/v1/jobpostings/2
 
 $ curl -X PUT -v -H "Content-Type: application/json" -d "{\"title\":\"Max Mustermann\",\"description\":\"My Desc\",\"department\":\"DEPARTMENT1\",\"status\":\"DRAFT\"}" http://localhost/api/v1/jobpostings/3
 
-$ curl -X POST -v -H "Content-Type: application/json" -d "{\"title\":\"Max Mustermann\",\"description\":\"My Desc\",\"department\":\"DEPARTMENT1\",\"status\":\"DRAFT\"}" http://localhost/api/v1/jobpostings
+$ curl -v -H "Content-Type: application/json" -d "{\"title\":\"Max Mustermann\",\"description\":\"My Desc\",\"department\":\"DEPARTMENT1\",\"status\":\"DRAFT\"}" http://localhost/api/v1/jobpostings
 
 $ curl -X PATCH -v -H "Content-Type: application/json" -d "{\"title\":\"Otto der Erste\"}" http://localhost/api/v1/jobpostings/3
 
