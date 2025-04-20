@@ -2,8 +2,15 @@ import { Department } from './department';
 
 export type JobPostingOrNull = JobPosting | null;
 
-export interface JobPosting {
+export interface JobPosting extends JobPostingBase {
   id: number;
+}
+
+export interface JobPostingNew extends JobPostingBase {
+  id?: number;
+}
+
+export interface JobPostingBase {
   title: string;
   description: string;
   department: Department;

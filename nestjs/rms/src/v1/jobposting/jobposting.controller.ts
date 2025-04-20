@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -15,6 +16,7 @@ import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { JobPosting, JobPostingOrNull } from '../domain';
 import { Response } from 'express';
+import { JobPostingNew } from '../domain/job_posting';
 
 @Controller('api')
 export class JobPostingController {
@@ -28,10 +30,11 @@ export class JobPostingController {
     return this.jobPostingService.getJobPostings();
   }
 
-  @Get('v1/jobpostings/:id')
-  getJobPosting(@Param('id') id: string, @Res() res: Response): void {
+  @Get('v1/jobpostings/:postId')
+  getJobPosting(@Param('postId') postId: string, @Res() res: Response): void {
+    this.logger.info(`Get Params: ${postId}`);
     const jobPosting: JobPostingOrNull = this.jobPostingService.getJobPosting(
-      this.getId(id),
+      this.getId(postId),
     );
     if (jobPosting !== null) {
       const job: JobPosting = jobPosting;
@@ -40,25 +43,47 @@ export class JobPostingController {
     res.status(HttpStatus.NOT_FOUND).end();
   }
 
-  @Put('v1/jobpostings/:id')
+  @Put('v1/jobpostings/:postId')
   putJobPostings(
-    @Param('id') id: string,
-    @Param('post') post: JobPosting,
+    @Param('postId') postId: string,
+    @Body() post: JobPostingNew,
   ): boolean {
-    this.logger.info(`Params: ${JSON.stringify(id)}`);
-    return this.jobPostingService.addOrReplaceJobPosting(this.getId(id), post);
+    this.logger.info(`Put Params: ${postId}`);
+    return this.jobPostingService.addOrReplaceJobPosting(
+      this.getId(postId),
+      post,
+    );
   }
 
-  @Post('v1/jobpostings/:id')
-  postJobPostings(@Param('id') post: JobPosting): number {
-    this.logger.info(`Params: ${JSON.stringify(post)}`);
+  @Post('v1/jobpostings/:postId')
+  postUpdateJobPostings(
+    @Param('postId') postId: string,
+    @Body() post: JobPosting,
+  ): void {
+    this.logger.info(`Post (update) Params: ${postId}`);
+    try {
+      this.jobPostingService.updateJobPosting(this.getId(postId), post);
+    } catch (err) {
+      throw new HttpException(
+        'Update failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('v1/jobpostings')
+  postCreateJobPostings(@Body() post: JobPostingNew): number {
+    this.logger.info(`Post (new) Params: ${JSON.stringify(post)}`);
     return this.jobPostingService.addJobPosting(post);
   }
 
-  @Delete('v1/jobpostings/:id')
-  deleteJobPostings(@Param('id') id: string, @Res() res: Response) {
-    this.logger.info(`Params: ${JSON.stringify(id)}`);
-    this.jobPostingService.deleteJobPosting(this.getId(id));
+  @Delete('v1/jobpostings/:postId')
+  deleteJobPostings(
+    @Param('postId') postId: string,
+    @Res() res: Response,
+  ): void {
+    this.logger.info(`Delete Params: ${postId}`);
+    this.jobPostingService.deleteJobPosting(this.getId(postId));
     res.status(HttpStatus.NO_CONTENT).send();
   }
 
