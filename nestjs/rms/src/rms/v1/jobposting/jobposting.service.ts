@@ -57,7 +57,7 @@ export class JobPostingService {
 
   public addJobPosting(jobPostingNew: JobPostingNew): number {
     const jobPosting: JobPosting = this.createJobPosting(jobPostingNew);
-    this.jobPostingMap[jobPosting.id] = jobPosting;
+    this.jobPostingMap.set(jobPosting.id, jobPosting);
     return jobPosting.id;
   }
 
